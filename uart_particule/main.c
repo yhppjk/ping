@@ -237,6 +237,8 @@ unsigned char commande[];
 unsigned char commande1[];
 unsigned char commande2[];
 unsigned char sensor[8];
+unsigned char button_ev;
+
 
 unsigned int count=0;
 unsigned char size =0;
@@ -273,7 +275,6 @@ int main(void)
     commande[0]=0x81;
     commande1[0]=0x11;
     commande2[0]=0x6e;
-    commande[1]=
     Init_uart();
 //    unsigned int exemple1=1998;
 //    unsigned int exemple2=1996;
@@ -307,7 +308,7 @@ int main(void)
     //button
     P1DIR &= ~BIT3;
     P1REN |= BIT3;
-    P1OUT &= ~BIT3;
+    P1OUT |= BIT3;
 
     // Init LED (1 port)
     P2DIR |= BIT2; // mode sortie
@@ -332,12 +333,14 @@ int main(void)
 
 
       // if((P2IN&BIT0 == 0) && (P2IN&BIT1 == 0)) && (P2IN&BIT1 == 0))
-      if(!(P2IN&BIT0) && !(P2IN&BIT1) && !(P1IN&BIT3) ) // Mode manuel et bouton enfonce
+      if(!(P2IN&BIT0) && !(P2IN&BIT1) && !(P1IN&BIT3) && (state != 6) ) // Mode manuel et bouton enfonce
       {
           state = 1;
-          send_string
+          button_ev = 0xfe;
       }
-
+        else{
+            button_ev=0xff;
+        }
 //      if((P2IN&BIT0) && !(P2IN&BIT1) ){ // Seuil opacite > 300 diff_temperature > 2  particule > 2000
 //
 //        if((opacite>300) && (diff_temperature > 2) ){
@@ -379,14 +382,17 @@ int main(void)
       switch(state)
       {
           case 1:
+              if(P1IN&BIT3)
+              {
               P2OUT |= BIT5; // Activation EV
               state = 2;
+              }
           break;
 
           case 2:
             if(count_ev < 50)
             {
-                P2OUT |= BIT2; // ALlumage LED vertes
+                P2OUT &= ~BIT2; // ALlumage LED vertes
                 state = 3;
                 count_ev++;
             }
@@ -397,12 +403,13 @@ int main(void)
           break;
 
           case 3: // Extinction led verte
-              P2OUT &= ~BIT2;
+              P2OUT |= BIT2;
               state = 2;
           break;
 
           case 4:
               P2OUT &= ~BIT5; // desactivation EV
+
               state=6;
           break;
 
@@ -428,11 +435,10 @@ int main(void)
           diff_temperature = origin_temperature-temperature;
       }
       count++;
-      temperature=(1023-temperature)/26;
+      temperature=(560-temperature)/10;
 
 
       ADC_Demarrer_conversion(6); // Opacité
-      opacite_num =ADC_Lire_resultat();
       opacite = opacite_num * 2.5 /1023 *1000;
       pm25 = getpm25();
 
@@ -455,7 +461,7 @@ int main(void)
 //          sensor[4]=i_tochar(exemple2,4);
 //          sensor[5]=i_tochar(exemple3,3);
 //          sensor[6]=i_tochar(exemple3,4);
-          sensor[0]=0xFF;
+          sensor[0]=button_ev;
           sensor[1]=i_tochar(temperature,3);
           sensor[2]=i_tochar(temperature,4);
           sensor[3]=i_tochar(opacite,3);
