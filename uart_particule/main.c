@@ -290,9 +290,9 @@ int main(void)
 
 
     // Init ADC
-    ADC_Lire_resultat();
     ADC_init();
     ADC_Demarrer_conversion(4);
+    ADC_Lire_resultat();
 
     // Init afficheurs
     Aff_Init(BIT3);
@@ -382,7 +382,7 @@ int main(void)
       switch(state)
       {
           case 1:
-              if(P1IN&BIT3)
+              if(P1IN&BIT3  )
               {
               P2OUT |= BIT5; // Activation EV
               state = 2;
@@ -424,7 +424,7 @@ int main(void)
 
 
 
-
+      ADC_init();
       ADC_Demarrer_conversion(4); // Température
       temperature_num = ADC_Lire_resultat();        //Get the value of ADC
       temperature = temperature_num * 2.5 /1023 *1000;       //Calculate with the 1024 steps of ADC10, the result is mV
@@ -435,11 +435,12 @@ int main(void)
           diff_temperature = origin_temperature-temperature;
       }
       count++;
-      temperature=(560-temperature)/10;
+//      temperature=(560-temperature)/10;
 
-
+      ADC_init_opacite();
       ADC_Demarrer_conversion(6); // Opacité
-      opacite = opacite_num * 2.5 /1023 *1000;
+      opacite_num = ADC_Lire_resultat();
+      opacite = opacite_num * 1.5 /1023 *1000;
       pm25 = getpm25();
 
 //          if(count>2){
@@ -780,6 +781,22 @@ void ADC_init(void)
 
     ADC10CTL0 =  SREF_0 | ADC10SHT_0  | REF2_5V | REFON | ADC10ON;  ;
 
+// Choix du diviseur par 1 pour l'horloge, d閙arrage conversion logiciel
+// Horloge de conversion 1MHz, conversion monovoie-monocoup
+
+    ADC10CTL1 =  ADC10DIV_0 | ADC10SSEL_2 |  SHS_0 | CONSEQ_0 ;
+
+}
+void ADC_init_opacite(void)
+{
+    ADC10CTL0 = ADC10CTL1 = 0;
+
+// Choix de la r閒閞ence de tension Vcc GND
+// R閒閞ence interne active et g閚閞ateur � 2,5 Volts  ADC10 actif
+// Les autres bits sont suppos閟 � 0
+
+    ADC10CTL0 =  SREF_0 | ADC10SHT_0  | REFON | ADC10ON;
+    ADC10CTL0 &= ~REF2_5V;
 // Choix du diviseur par 1 pour l'horloge, d閙arrage conversion logiciel
 // Horloge de conversion 1MHz, conversion monovoie-monocoup
 
