@@ -3,7 +3,7 @@
 #include <intrinsics.h>
 
 #include <stdio.h>
-#include <stdint.h>
+#include <math.h>
 
 // Prototypes
 
@@ -247,6 +247,8 @@ unsigned int flag=1;
 unsigned int origin_temperature;
 unsigned int temperature;
 unsigned int opacite;
+unsigned int flag_opacite = 0;
+unsigned char boucle_opacite=0;
 unsigned int diff_temperature;
 
 float temperature_num;
@@ -432,25 +434,44 @@ int main(void)
           origin_temperature = temperature;
       }
       else{
-          diff_temperature = origin_temperature-temperature;
+          diff_temperature = abs(origin_temperature-temperature);
       }
       count++;
+      temperature = 1180-temperature;
+
 //      temperature=(560-temperature)/10;
 
       ADC_init_opacite();
       ADC_Demarrer_conversion(6); // Opacité
       opacite_num = ADC_Lire_resultat();
       opacite = opacite_num * 1.5 /1023 *1000;
-      pm25 = getpm25();
+
+
+      if(boucle_opacite>10){
+          flag_opacite=0;
+          boucle_opacite=0;
+      }
+      else{
+          boucle_opacite++;
+      }
+      if(opacite!=0)
+          flag_opacite +=opacite;
+
+
+
 
 //          if(count>2){
-          /* Particles sensor */
+      /* Particles sensor */
       if(flag == 1){
           send_string(commande);
           send_string(commande1);
           send_string(commande2);
+          pm25 = getpm25();
           flag = 2;
       }
+
+      /* saisir particule */
+
 
       /*table sensor: 0      1 2 3 4 5 6   7 */
       /*             Start   T T C C P P  end  */
@@ -463,8 +484,8 @@ int main(void)
 //          sensor[5]=i_tochar(exemple3,3);
 //          sensor[6]=i_tochar(exemple3,4);
           sensor[0]=button_ev;
-          sensor[1]=i_tochar(temperature,3);
-          sensor[2]=i_tochar(temperature,4);
+          sensor[1]=i_tochar(diff_temperature,3);
+          sensor[2]=i_tochar(diff_temperature,4);
           sensor[3]=i_tochar(opacite,3);
           sensor[4]=i_tochar(opacite,4);
           sensor[5]=i_tochar(pm25,3);
