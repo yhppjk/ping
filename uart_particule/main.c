@@ -412,7 +412,6 @@ int main(void)
 
           case 4:
               P2OUT &= ~BIT5; // desactivation EV
-
               state=6;
           break;
 
