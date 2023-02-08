@@ -208,17 +208,6 @@ void Aff_valeur(int c,unsigned int bit);
 
 
 /* ADC ESIG' */
-
-
-/* ADC Haoping */
-unsigned int ADC_Get(void);
-
-
-
-void ADC_I(void);
-
-
-/* ADC ESIG' */
 void ADC_Demarrer_conversion(unsigned char voie);
 
 void ADC_init(void);
@@ -262,10 +251,8 @@ unsigned char count_ev =0;
 unsigned char state=0;
 
 char *adresse;
-// unsigned char a[];
 
-// dunsigned char message[];
-
+/*  Main */
 int main(void)
 {
     WDTCTL = WDTPW + WDTHOLD;
@@ -276,18 +263,6 @@ int main(void)
     commande1[0]=0x11;
     commande2[0]=0x6e;
     Init_uart();
-//    unsigned int exemple1=1998;
-//    unsigned int exemple2=1996;
-//    unsigned int exemple3=2005;
-
-
-    /* Test température + SPI + 4 lEDS Vertes + 2 entrées SW */
-
-//    unsigned int i = 0;         // Initialize variables. This will keep count of how many cycles between LED toggles
-//
-//    float U = 0;
-//    uint16_t val = 0;
-
 
     // Init ADC
     ADC_init();
@@ -341,6 +316,7 @@ int main(void)
         else{
             button_ev=0xff;
         }
+        /* Seuil de different mode*/
 //      if((P2IN&BIT0) && !(P2IN&BIT1) ){ // Seuil opacite > 300 diff_temperature > 2  particule > 2000
 //
 //        if((opacite>300) && (diff_temperature > 2) ){
@@ -423,9 +399,9 @@ int main(void)
 
 
 
-
-      ADC_init();
-      ADC_Demarrer_conversion(4); // Température
+      /*  Température */
+      ADC_init(); 
+      ADC_Demarrer_conversion(4); // 
       temperature_num = ADC_Lire_resultat();        //Get the value of ADC
       temperature = temperature_num * 2.5 /1023 *1000;       //Calculate with the 1024 steps of ADC10, the result is mV
       if(count==0){
@@ -435,15 +411,14 @@ int main(void)
           diff_temperature = origin_temperature-temperature;
       }
       count++;
-//      temperature=(560-temperature)/10;
-
+        
+        /* opacite */
       ADC_init_opacite();
       ADC_Demarrer_conversion(6); // Opacité
       opacite_num = ADC_Lire_resultat();
       opacite = opacite_num * 1.5 /1023 *1000;
       pm25 = getpm25();
 
-//          if(count>2){
           /* Particles sensor */
       if(flag == 1){
           send_string(commande);
@@ -453,15 +428,8 @@ int main(void)
       }
 
       /*table sensor: 0      1 2 3 4 5 6   7 */
-      /*             Start   T T C C P P  end  */
+      /*             Start   T T O O P P  end  */
       else if(flag == 2){
-//          sensor[0]=0xFF;
-//          sensor[1]=i_tochar(exemple1,3);
-//          sensor[2]=i_tochar(exemple1,4);
-//          sensor[3]=i_tochar(exemple2,3);
-//          sensor[4]=i_tochar(exemple2,4);
-//          sensor[5]=i_tochar(exemple3,3);
-//          sensor[6]=i_tochar(exemple3,4);
           sensor[0]=button_ev;
           sensor[1]=i_tochar(temperature,3);
           sensor[2]=i_tochar(temperature,4);
@@ -474,17 +442,14 @@ int main(void)
           send_string_value(sensor);
           flag=1;
       }
-//          for (j=0; j<5000; j++);
           __enable_interrupt();       // ´ò¿ªÈ«¾ÖÖÐ¶Ï
-
-//          pm25 = getpm25();
-//          Aff_valeur(convert_Hex_Dec(pm25),BIT3);
           __delay_cycles(100000);
 
     }
 }
 
 
+/* Selectionner la bonne place dans la data de sensor particule */
 char i_tochar(int input, int i){
     return (input >> 8*i) & 0xFF;
 }
