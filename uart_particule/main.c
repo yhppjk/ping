@@ -338,7 +338,7 @@ int main(void)
       if(!(P2IN&BIT0) && !(P2IN&BIT1) && !(P1IN&BIT3) && (state != 6) ) // Mode manuel et bouton enfonce
       {
           state = 1;
-          button_ev = 0xfe;
+
       }
         else{
             button_ev=0xff;
@@ -384,10 +384,11 @@ int main(void)
       switch(state)
       {
           case 1:
-              if(P1IN&BIT3  )
+              if(P1IN&BIT3) // relachement bouton
               {
-              P2OUT |= BIT5; // Activation EV
-              state = 2;
+                  P2OUT |= BIT5; // Activation EV
+                  state = 2;
+                  button_ev = 0xfe;
               }
           break;
 
@@ -437,7 +438,7 @@ int main(void)
           diff_temperature = abs(origin_temperature-temperature);
       }
       count++;
-      temperature = 1180-temperature;
+//      temperature = 1180-temperature;
 
 //      temperature=(560-temperature)/10;
 
@@ -446,7 +447,7 @@ int main(void)
       opacite_num = ADC_Lire_resultat();
       opacite = opacite_num * 1.5 /1023 *1000;
 
-
+      /* boucle pour calculer opacite */
       if(boucle_opacite>10){
           flag_opacite=0;
           boucle_opacite=0;
